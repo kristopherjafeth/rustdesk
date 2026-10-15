@@ -8,6 +8,7 @@ on:
       - "jimka/**"
       - "!jimka/instalador/**"
       - "!jimka/README.md"
+      - "!jimka/build-windows.ps1"
       - ".github/workflows/jimka-build.yml"
 
 jobs:
