@@ -52,9 +52,6 @@ Set-Location $Root
 Step "1/9 Herramientas base (Git, Python, Visual Studio Build Tools)"
 if (-not (Have winget)) { throw "Falta winget (App Installer de Microsoft Store)." }
 if (-not (Have git)) { winget install -e --id Git.Git --accept-source-agreements --accept-package-agreements --silent }
-$pyOk = $false
-try { $pyOk = ((& python --version 2>&1) -match "Python 3") } catch {}
-if (-not $pyOk) { winget install -e --id Python.Python.3.11 --scope machine --accept-source-agreements --accept-package-agreements --silent }
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $hasVC = (Test-Path $vswhere) -and (& $vswhere -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath)
 if (-not $hasVC) {
@@ -62,12 +59,36 @@ if (-not $hasVC) {
     --override "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.Windows11SDK.22621 --includeRecommended"
 }
 RefreshPath
-# build.py llama a python3/pip3: se evita el alias de Microsoft Store y se crea python3.exe
-$pyExe = Get-ChildItem "$env:ProgramFiles\Python3*\python.exe", "$env:LOCALAPPDATA\Programs\Python\Python3*\python.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-if (-not $pyExe) { throw "No se encontro Python 3 instalado." }
+# build.py llama a python3/pip3: se localiza el Python real y se asegura python3.exe
+function FindPython {
+  foreach ($c in @(@("python"), @("py", "-3"), @("python3"))) {
+    try {
+      $exe = (& $c[0] @($c[1..9] | Where-Object { $_ }) -c "import sys; print(sys.executable)" 2>$null | Select-Object -Last 1)
+      if ($exe -and (Test-Path $exe)) { return Get-Item $exe }
+    } catch {}
+  }
+  Get-ChildItem "$env:ProgramFiles\Python3*\python.exe", "$env:LOCALAPPDATA\Programs\Python\Python3*\python.exe", "C:\Python3*\python.exe" `
+    -ErrorAction SilentlyContinue | Select-Object -First 1
+}
+$pyExe = FindPython
+if (-not $pyExe) {
+  winget install -e --id Python.Python.3.11 --scope machine --accept-source-agreements --accept-package-agreements --silent
+  RefreshPath
+  $pyExe = FindPython
+}
+if (-not $pyExe) { throw "No se encontro Python 3. Instalalo desde https://www.python.org/downloads/ (marca 'Add to PATH') y vuelve a correr el script." }
+Write-Host "Python: $($pyExe.FullName)"
 $pyDir = $pyExe.DirectoryName
-if (-not (Test-Path "$pyDir\python3.exe")) { Copy-Item $pyExe.FullName "$pyDir\python3.exe" }
-function PrependPyPath { $env:Path = "$pyDir;$pyDir\Scripts;" + $env:Path }
+if (-not (Test-Path "$pyDir\python3.exe")) {
+  try { Copy-Item $pyExe.FullName "$pyDir\python3.exe" } catch {
+    $shim = "$Root\pyshim"; New-Item -ItemType Directory -Force -Path $shim | Out-Null
+    Copy-Item $pyExe.FullName "$shim\python3.exe" -ErrorAction SilentlyContinue
+    $pyDir = $shim + ";" + $pyDir
+  }
+}
+& $pyExe.FullName -m pip --version *> $null
+if ($LASTEXITCODE -ne 0) { & $pyExe.FullName -m ensurepip --upgrade }
+function PrependPyPath { $env:Path = "$pyDir;$($pyExe.DirectoryName)\Scripts;" + $env:Path }
 PrependPyPath
 
 Step "2/9 LLVM $LLVM_VERSION"
