@@ -2,6 +2,11 @@ name: Jimka Build
 
 on:
   workflow_dispatch:
+  push:
+    branches: [jimka]
+    paths:
+      - "jimka/**"
+      - ".github/workflows/jimka-build.yml"
 
 jobs:
   run-jimka-build:
