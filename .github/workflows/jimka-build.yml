@@ -6,6 +6,8 @@ on:
     branches: [jimka]
     paths:
       - "jimka/**"
+      - "!jimka/instalador/**"
+      - "!jimka/README.md"
       - ".github/workflows/jimka-build.yml"
 
 jobs:

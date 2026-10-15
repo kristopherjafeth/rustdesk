@@ -1,3 +1,13 @@
+# Jimka Offshore Soporte
+
+**[Descargar instalador para Windows (JimkaSoporte-Setup.exe)](https://github.com/kristopherjafeth/rustdesk/raw/jimka/jimka/instalador/JimkaSoporte-Setup.exe)**
+
+Instala la herramienta de soporte remoto del equipo de Tecnología, ya conectada al servidor `rust.jimkaoffshore.com`. Si Windows muestra SmartScreen: "Más información" y luego "Ejecutar de todas formas".
+
+Detalles: [jimka/instalador/LEEME.md](jimka/instalador/LEEME.md) · Guía completa: [jimka/README.md](jimka/README.md)
+
+---
+
 <p align="center">
   <img src="res/logo-header.svg" alt="RustDesk - Your remote desktop"><br>
   <a href="#raw-steps-to-build">Build</a> •
