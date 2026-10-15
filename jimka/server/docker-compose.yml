@@ -1,0 +1,23 @@
+# Servidor RustDesk OSS (hbbs + hbbr) para Jimka Offshore
+# Uso: docker compose up -d   (en la carpeta de este archivo)
+# La clave publica queda en ./data/id_ed25519.pub tras el primer arranque.
+services:
+  hbbs:
+    container_name: hbbs
+    image: rustdesk/rustdesk-server:latest
+    command: hbbs -k _          # -k _ : solo clientes con la clave correcta pueden conectar
+    volumes:
+      - ./data:/root
+    network_mode: host
+    depends_on:
+      - hbbr
+    restart: unless-stopped
+
+  hbbr:
+    container_name: hbbr
+    image: rustdesk/rustdesk-server:latest
+    command: hbbr -k _
+    volumes:
+      - ./data:/root
+    network_mode: host
+    restart: unless-stopped

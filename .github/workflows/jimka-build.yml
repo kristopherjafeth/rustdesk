@@ -1,0 +1,22 @@
+name: Jimka Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [jimka]
+    paths:
+      - "jimka/**"
+      - "!jimka/instalador/**"
+      - "!jimka/README.md"
+      - "!jimka/build-windows.ps1"
+      - ".github/workflows/jimka-build.yml"
+
+jobs:
+  run-jimka-build:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/flutter-build.yml
+    secrets: inherit
+    with:
+      upload-artifact: true
+      upload-tag: "jimka"
